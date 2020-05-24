@@ -20,6 +20,14 @@ void Mesh::Draw(Shader shader) {
 
 		glBindTexture(GL_TEXTURE_2D, textures[i].id);
 	}
+
+	// draw mesh
+	glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+
+	//set to default
+	glBindVertexArray(0);
+	glActiveTexture(GL_TEXTURE0);
 }
 
 
@@ -53,6 +61,11 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture
 	glBindVertexArray(0);
 }
 
+
+void Model::Draw(Shader shader) {
+	for (int i = 0; i < this->meshes.size(); i++)
+		this->meshes[i].Draw(shader);
+}
 
 Model::Model(string const& path) {
 	//read files

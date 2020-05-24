@@ -1,5 +1,4 @@
-*.dll
-*.lib
+
 
 # Files built by Visual Studio
 *_i.c

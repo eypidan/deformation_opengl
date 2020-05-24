@@ -25,6 +25,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\readModel.cpp" />
+    <ClCompile Include="..\src\renderFunction.cpp" />
     <ClCompile Include="..\src\shaderLoad.cpp" />
     <ClCompile Include="..\src\vgl_try.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
@@ -32,11 +33,17 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\camera.h" />
     <ClInclude Include="..\include\miscFunction.h" />
     <ClInclude Include="..\include\readModel.h" />
+    <ClInclude Include="..\include\renderFunction.h" />
     <ClInclude Include="..\include\shaderLoad.h" />
     <ClInclude Include="..\include\stb_image.h" />
     <ClInclude Include="..\src\pch.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\shaderFiles\modelFragment.glsl" />
+    <None Include="..\shaderFiles\modelVertex.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

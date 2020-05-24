@@ -24,5 +24,29 @@
 #include "stb_image.h"
 #include "miscFunction.h"
 #include "shaderLoad.h"
+#include "camera.h"
 #include "readModel.h"
+#include "renderFunction.h"
+
+
+// settings
+const unsigned int SCR_WIDTH = 1000;
+const unsigned int SCR_HEIGHT = 800;
+
+//camera
+extern Camera camera;
+extern float lastX;
+extern float lastY;
+extern bool firstMouse;
+
+// timing
+extern float deltaTime;
+extern float lastFrame;
+
+//model rotate
+extern float x_angles;
+extern float y_angles;
+extern float z_angles;
+
+
 
