@@ -10,8 +10,8 @@ void processInput(GLFWwindow* window);
 unsigned int TextureFromFile(const char* path, const std::string & directory);
 
 struct lightSource {
-	glm::vec3 lightPos;
-	glm::vec3 lightColor;
+	Eigen::Vector3f lightPos;
+	Eigen::Vector3f lightColor;
 };
 
 #endif

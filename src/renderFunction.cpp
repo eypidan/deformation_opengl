@@ -3,21 +3,20 @@
 void renderModel(Shader shader, Model *object,  lightSource light, Camera camera) {
 
 	shader.use();
-	glm::mat4 model = glm::mat4(1.0f);
+	Eigen::Matrix4f model;
 	glm::mat4 view = camera.GetViewMatrix();
-	glm::mat4 projection = glm::perspective(camera.Zoom, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 150.0f);
+	glm::mat4 projection = camera.GetPerspectiveMatrix();
 	
 	
 	//correct order scale, rotate,translate T*R*S*MODEL
-	//however,glm is reverse..... 
-	model = glm::translate(model, glm::vec3(0.0f, 0.0f, -20.0f));
-	
-	model = glm::rotate(model, x_angles, glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, y_angles, glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, z_angles, glm::vec3(0.0f, 0.0f, 1.0f));
+	Eigen::Affine3f r_model = create_rotation_matrix(x_angles, y_angles,z_angles);
+	Eigen::Affine3f t_model(Eigen::Translation3f(Eigen::Vector3f(0, 0, -20)));
+	Eigen::Affine3f s_model(Eigen::Scaling(Eigen::Vector3f(0.05, 0.05, 0.05)));
+	Eigen::Matrix4f transform_model = (t_model * r_model * s_model).matrix();
 
-	model = glm::scale(model, glm::vec3(0.05f, 0.05f, 0.05f));
-	
+	model = transform_model;
+	//cout << view << endl;
+	//cout << projection << endl;
 	shader.setMat4("model", model);
 	shader.setMat4("view", view);
 	shader.setMat4("projection", projection);
@@ -27,4 +26,14 @@ void renderModel(Shader shader, Model *object,  lightSource light, Camera camera
 	shader.setVec3("viewPos", camera.Position);
 
 	object->Draw(shader);
+}
+
+Eigen::Affine3f create_rotation_matrix(double ax, double ay, double az) {
+	Eigen::Affine3f rx =
+		Eigen::Affine3f(Eigen::AngleAxisf(ax, Eigen::Vector3f(1, 0, 0)));
+	Eigen::Affine3f ry =
+		Eigen::Affine3f(Eigen::AngleAxisf(ay, Eigen::Vector3f(0, 1, 0)));
+	Eigen::Affine3f rz =
+		Eigen::Affine3f(Eigen::AngleAxisf(az, Eigen::Vector3f(0, 0, 1)));
+	return rz * ry * rx;
 }

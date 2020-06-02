@@ -47,16 +47,16 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_DYNAMIC_DRAW);
-	
+
 	// position 
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vertices[0].Position.data()- (float*)&vertices[0])); 
 	// normal
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vertices[0].Normal.data()- (float*)& vertices[0]));
 	// texture coords
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vertices[0].TexCoords.data() - (float*)& vertices[0]));
 	
 	glBindVertexArray(0);
 }
@@ -102,22 +102,21 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 	
 	for (int i = 0; i < mesh->mNumVertices; i++) {
 		Vertex v;
-		
-		v.Position.x = mesh->mVertices[i].x;
-		v.Position.z = mesh->mVertices[i].z;
-		v.Position.y = mesh->mVertices[i].y;
+		v.Position[0] = mesh->mVertices[i].x;
+		v.Position[2] = mesh->mVertices[i].z;
+		v.Position[1] = mesh->mVertices[i].y;
 
-		v.Normal.x = mesh->mNormals[i].x;
-		v.Normal.y = mesh->mNormals[i].y;
-		v.Normal.z = mesh->mNormals[i].z;
+		v.Normal[0] = mesh->mNormals[i].x;
+		v.Normal[1] = mesh->mNormals[i].y;
+		v.Normal[2] = mesh->mNormals[i].z;
 
 		//texture
 		if (mesh->mTextureCoords[0]) {
-			v.TexCoords.x = mesh->mTextureCoords[0][i].x;
-			v.TexCoords.y = mesh->mTextureCoords[0][i].y;
+			v.TexCoords[0] = mesh->mTextureCoords[0][i].x;
+			v.TexCoords[1] = mesh->mTextureCoords[0][i].y;
 		}
 		else
-			v.TexCoords = glm::vec2(0.0f, 0.0f);
+			v.TexCoords = Eigen::Vector2f(0.0f, 0.0f);
 
 		vertices.push_back(v);
 	}

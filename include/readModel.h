@@ -4,9 +4,9 @@
 using namespace std;
 
 struct Vertex {
-	glm::vec3 Position;
-	glm::vec3 Normal;
-	glm::vec2 TexCoords;
+	Eigen::Vector3f Position;
+	Eigen::Vector3f Normal;
+	Eigen::Vector2f TexCoords;
 };
 
 struct Texture {
@@ -46,5 +46,6 @@ private:
 	vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName);
 };
 
+Eigen::Affine3f create_rotation_matrix(double ax, double ay, double az);
 
 #endif // READMODEL_H

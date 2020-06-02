@@ -14,7 +14,8 @@ uniform vec3 viewPos;
 uniform vec3 lightColor;
 
 void main() {           
-     vec3 color = texture(texture_diffuse0, fs_in.TexCoords).rgb;
+     //vec3 color = texture(texture_diffuse0, fs_in.TexCoords).rgb;
+     vec3 color = vec3(0.1,0.2,0.3);
      vec3 normal = normalize(fs_in.Normal);
     
      // ambient
@@ -31,6 +32,6 @@ void main() {
      spec = pow(max(dot(normal, halfwaydir), 0.0), 64.0);
      vec3 specular = spec * lightColor;    
      vec3 lighting = (ambient + diffuse + specular) * color;    
-    
+
      FragColor = vec4(lighting, 1.0);
 }
