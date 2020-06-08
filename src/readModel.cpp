@@ -2,24 +2,7 @@
 
 
 void Mesh::Draw(Shader shader) {
-	//bind texture
-	unsigned int diffuseNr = 1;
-	unsigned int specularNr = 1;
-	for (int i = 0; i < textures.size(); i++) {
-		glActiveTexture(GL_TEXTURE0 + i);
-		string number;
-		string name = textures[i].type;
-
-		if (name == "texture_diffuse")
-			number = std::to_string(diffuseNr++);
-		else if (name == "texture_specular")
-			number = std::to_string(specularNr++);
-
-		//pass this value to fragment shader
-		glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
-
-		glBindTexture(GL_TEXTURE_2D, textures[i].id);
-	}
+	
 
 	// draw mesh
 	glBindVertexArray(VAO);
@@ -31,10 +14,9 @@ void Mesh::Draw(Shader shader) {
 }
 
 
-Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures) {
+Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices) {
 	this->vertices = vertices;
 	this->indices = indices;
-	this->textures = textures;
 
 	//create buffer
 	glGenVertexArrays(1, &VAO);
@@ -54,10 +36,28 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture
 	// normal
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vertices[0].Normal.data()- (float*)& vertices[0]));
-	// texture coords
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vertices[0].TexCoords.data() - (float*)& vertices[0]));
+	//// texture coords
+	//glEnableVertexAttribArray(2);
+	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vertices[0].TexCoords.data() - (float*)& vertices[0]));
 	
+	glBindVertexArray(0);
+}
+
+void Mesh::updateVertex() {
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_DYNAMIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_DYNAMIC_DRAW);
+
+	// position 
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vertices[0].Position.data() - (float*)&vertices[0]));
+	// normal
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vertices[0].Normal.data() - (float*)&vertices[0]));
+
 	glBindVertexArray(0);
 }
 
@@ -98,7 +98,6 @@ void Model::processNode(aiNode* node, const aiScene* scene) {
 Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 	vector<Vertex> vertices;
 	vector<unsigned int> indices;
-	vector<Texture> textures;
 	
 	for (int i = 0; i < mesh->mNumVertices; i++) {
 		Vertex v;
@@ -106,17 +105,15 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 		v.Position[2] = mesh->mVertices[i].z;
 		v.Position[1] = mesh->mVertices[i].y;
 
-		v.Normal[0] = mesh->mNormals[i].x;
-		v.Normal[1] = mesh->mNormals[i].y;
-		v.Normal[2] = mesh->mNormals[i].z;
-
-		//texture
-		if (mesh->mTextureCoords[0]) {
-			v.TexCoords[0] = mesh->mTextureCoords[0][i].x;
-			v.TexCoords[1] = mesh->mTextureCoords[0][i].y;
+		if (mesh->mNormals != NULL) {
+			v.Normal[0] = mesh->mNormals[i].x;
+			v.Normal[1] = mesh->mNormals[i].y;
+			v.Normal[2] = mesh->mNormals[i].z;
 		}
-		else
-			v.TexCoords = Eigen::Vector2f(0.0f, 0.0f);
+		else {
+			;
+		}
+
 
 		vertices.push_back(v);
 	}
@@ -128,43 +125,6 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 			indices.push_back(face.mIndices[j]);
 	}
 
-	//material
-	aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-	// 1. diffuse maps
-	vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-	textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-	// 2. specular maps
-	vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-	textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-
-	return Mesh(vertices, indices, textures);
-}
-
-
-vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName) {
-	vector<Texture> textures;
-	int texNum = mat->GetTextureCount(type);
-	for (int i = 0; i < texNum; i++) {
-		aiString str;
-		mat->GetTexture(type, i, &str);
-		bool haveLoad = false;
-		for (int j = 0; j < this->textures_loaded.size(); j++) {
-			if (std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0) {
-				textures.push_back(textures_loaded[j]);
-				haveLoad = true;
-				break;
-			}
-		}
-
-		if (!haveLoad) {
-			Texture texture;
-			texture.id = TextureFromFile(str.C_Str(), this->directory);
-			texture.type = typeName;
-			texture.path = str.C_Str();
-			textures.push_back(texture);
-			textures_loaded.push_back(texture);
-		}
-	}
-	return textures;
+	return Mesh(vertices, indices);
 }

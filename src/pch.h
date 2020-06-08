@@ -33,9 +33,10 @@
 #include "camera.h"
 #include "readModel.h"
 #include "renderFunction.h"
+#include "deformation.h"
 
-
-
+//model
+extern Model *magicCube;
 
 //camera
 extern Camera camera;
@@ -49,5 +50,6 @@ extern float x_angles;
 extern float y_angles;
 extern float z_angles;
 
-
+//control point move
+extern controlMove controlMove_0;
 

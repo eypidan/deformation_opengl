@@ -1,10 +1,9 @@
-#version 460 core
+#version 430 core
 out vec4 FragColor;
 
 in VS_OUT {
     vec3 FragPos;
     vec3 Normal;
-    vec2 TexCoords;
 } fs_in;
 
 uniform sampler2D texture_diffuse0;
@@ -12,14 +11,15 @@ uniform sampler2D texture_diffuse0;
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform vec3 lightColor;
+uniform vec3 fragmentColor;
 
 void main() {           
      //vec3 color = texture(texture_diffuse0, fs_in.TexCoords).rgb;
-     vec3 color = vec3(0.1,0.2,0.3);
+     vec3 color = fragmentColor;
      vec3 normal = normalize(fs_in.Normal);
     
      // ambient
-     vec3 ambient = 0.6 * lightColor;
+     vec3 ambient = 0.9 * lightColor;
      // diffuse
      vec3 lightdir = normalize(lightPos - fs_in.FragPos);
      float diff = max(dot(lightdir, normal), 0.0);

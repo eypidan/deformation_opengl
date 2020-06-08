@@ -5,6 +5,8 @@ float x_angles = 0.0f;
 float y_angles = 0.0f;
 float z_angles = 0.0f;
 
+controlMove controlMove_0;
+
 void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -26,6 +28,26 @@ void processInput(GLFWwindow* window)
 		z_angles -= 0.05f;
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 		z_angles += 0.05f;
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+		controlMove_0.x += 5;
+		test(&magicCube->meshes[0]);
+	}
+		
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+		controlMove_0.x -= 5;
+		test(&magicCube->meshes[0]);
+	}
+		
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		controlMove_0.y += 5;
+		test(&magicCube->meshes[0]);
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+		controlMove_0.y -= 5;
+		test(&magicCube->meshes[0]);
+	}
+
 }
 
 
