@@ -50,6 +50,8 @@ public:
         return glm::perspective(Zoom, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 300.0f);
     }
     
+    //mouse ray tracing
+    glm::vec3 createRay();
 
 private:
     // Calculates the front vector from the Camera's (updated) Euler Angles

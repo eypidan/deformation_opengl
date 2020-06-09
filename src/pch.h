@@ -53,3 +53,11 @@ extern float z_angles;
 //control point move
 extern controlMove controlMove_0;
 
+//window
+extern GLFWwindow* window;
+
+//mouse
+extern double mouseX, mouseY;
+
+//bunny
+extern bool bunny;

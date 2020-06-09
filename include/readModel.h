@@ -11,11 +11,16 @@ struct Vertex {
 
 class Mesh {
 private:
+	vector<unsigned int> indicesControl;
+	vector<Vertex> verticesControl;
+
 	vector<unsigned int>indices;
 	unsigned int VAO;
 	unsigned int VBO, EBO;
+	unsigned int VAO_point, VBO_point;
 public:
 	vector<Vertex> vertices;
+
 	Mesh(vector<Vertex> vertices, vector<unsigned int> indices);
 	void updateVertex();
 	void Draw(Shader shader);

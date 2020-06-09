@@ -53,7 +53,8 @@ void processInput(GLFWwindow* window)
 
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-	;
+	mouseX = xpos;
+	mouseY = ypos;
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {

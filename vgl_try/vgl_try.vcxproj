@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\camera.cpp" />
     <ClCompile Include="..\src\deformation.cpp" />
     <ClCompile Include="..\src\glad.cpp" />
     <ClCompile Include="..\src\miscFunction.cpp" />
@@ -46,6 +47,8 @@
   <ItemGroup>
     <None Include="..\shaderFiles\modelFragment.glsl" />
     <None Include="..\shaderFiles\modelVertex.glsl" />
+    <None Include="..\shaderFiles\pickingFragment.glsl" />
+    <None Include="..\shaderFiles\pickingVertex.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

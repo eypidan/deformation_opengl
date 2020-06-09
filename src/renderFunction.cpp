@@ -1,8 +1,8 @@
 #include "pch.h"
 
-void renderModel(Shader shader, Model *object,  lightSource light, Camera camera) {
+void renderModel(Shader shader, Model *object,  lightSource light, Camera camera, Shader pickShader) {
 
-	shader.use();
+	
 	Eigen::Matrix4f model;
 	glm::mat4 view = camera.GetViewMatrix();
 	glm::mat4 projection = camera.GetPerspectiveMatrix();
@@ -25,6 +25,17 @@ void renderModel(Shader shader, Model *object,  lightSource light, Camera camera
 	shader.setVec3("lightPos", light.lightPos);
 	shader.setVec3("viewPos", camera.Position);
 
+	//selected target mesh
+	static int oldMouseAction = GLFW_RELEASE;
+	int mouseAction = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+	if (mouseAction == GLFW_RELEASE && oldMouseAction == GLFW_PRESS) {
+		cout << mouseX << "," << mouseY << endl;
+		glm::vec3 rayDirection = camera.createRay();
+
+	}
+	oldMouseAction = mouseAction;
+
+	shader.use();
 	object->Draw(shader);
 }
 
