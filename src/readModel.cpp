@@ -1,16 +1,25 @@
 #include "pch.h"
 
+using namespace Eigen;
+static Eigen::Vector3f yellow , black;
 
 void Mesh::Draw(Shader shader) {
 	
 
 	// draw mesh
 	glBindVertexArray(VAO);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	shader.setVec3("color", black);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-
+	
+	////draw line
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//shader.setVec3("color", black);
+	//glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT, 0);
+	
 	//set to default
 	glBindVertexArray(0);
-	glActiveTexture(GL_TEXTURE0);
+
 }
 
 
@@ -23,6 +32,7 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices) {
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
 
+
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_DYNAMIC_DRAW);
@@ -30,17 +40,21 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_DYNAMIC_DRAW);
 
+
 	// position 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vertices[0].Position.data()- (float*)&vertices[0])); 
 	// normal
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vertices[0].Normal.data()- (float*)& vertices[0]));
-	//// texture coords
+
+	//// element color
 	//glEnableVertexAttribArray(2);
-	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vertices[0].TexCoords.data() - (float*)& vertices[0]));
+	//glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Eigen::Vector3f), (void*)(fragmentColor[0].data() - (float*)&fragmentColor[0]));
 	
 	glBindVertexArray(0);
+	yellow << 0.5 ,0.4 ,0.1;
+	black << 0.0, 0.0, 0.0;
 }
 
 void Mesh::updateVertex() {
@@ -57,6 +71,9 @@ void Mesh::updateVertex() {
 	// normal
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vertices[0].Normal.data() - (float*)&vertices[0]));
+	//// vertex color
+	//glEnableVertexAttribArray(2);
+	//glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vertices[0].Color.data() - (float*)&vertices[0]));
 
 	glBindVertexArray(0);
 }
@@ -98,7 +115,7 @@ void Model::processNode(aiNode* node, const aiScene* scene) {
 Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 	vector<Vertex> vertices;
 	vector<unsigned int> indices;
-	
+
 	for (int i = 0; i < mesh->mNumVertices; i++) {
 		Vertex v;
 		v.Position[0] = mesh->mVertices[i].x;
@@ -111,7 +128,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 			v.Normal[2] = mesh->mNormals[i].z;
 		}
 		else {
-			;
+			//Vector3f a;
 		}
 
 
@@ -121,8 +138,12 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 	//face
 	for (int i = 0; i < mesh->mNumFaces; i++) {
 		aiFace face = mesh->mFaces[i];
-		for (int j = 0; j < face.mNumIndices; j++)
+		
+		for (int j = 0; j < face.mNumIndices; j++) {
+			
 			indices.push_back(face.mIndices[j]);
+		}
+			
 	}
 
 

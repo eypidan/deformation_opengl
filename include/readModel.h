@@ -11,7 +11,6 @@ struct Vertex {
 
 class Mesh {
 private:
-	
 	vector<unsigned int>indices;
 	unsigned int VAO;
 	unsigned int VBO, EBO;

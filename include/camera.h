@@ -47,7 +47,7 @@ public:
         return glm::lookAt(Position, Position + Front, Up);
     }
     glm::mat4 GetPerspectiveMatrix() {
-        return glm::perspective(Zoom, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 150.0f);
+        return glm::perspective(Zoom, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 300.0f);
     }
     
 
@@ -66,59 +66,6 @@ private:
         Up = glm::normalize(glm::cross(Right, Front));
     }
 };
-
-//class Camera {
-//public:
-//    // Camera Attributes
-//    Eigen::Vector3f Position;
-//    Eigen::Vector3f Up;
-//    Eigen::Vector3f Center;
-//    Eigen::Matrix4f perspective;
-//    // Constructor with vectors
-//    Camera(Eigen::Vector3f position, Eigen::Vector3f up) {
-//        Center = Eigen::Vector3f(0, 0, 0);
-//        Position = position;
-//        Up = up;
-//    }
-//
-//
-//    // Returns the view matrix calculated using Euler Angles and the LookAt Matrix
-//    Eigen::Matrix4f GetViewMatrix() {
-//
-//        return glm::lookAt(Position, Position + Front, Up);
-//        Eigen::Matrix4f mViewMatrix = Eigen::Matrix4f::Constant(0.0f);
-//        Eigen::Matrix3f R;
-//        R.col(2) = (Position - Center).normalized();
-//        R.col(0) = Up.cross(R.col(2)).normalized();
-//        R.col(1) = R.col(2).cross(R.col(0));
-//        mViewMatrix.topLeftCorner<3, 3>() = R.transpose();
-//        mViewMatrix.topRightCorner<3, 1>() = -R.transpose() * Position;
-//        mViewMatrix(3, 3) = 1.0f;
-//        return mViewMatrix;
-//    }
-//
-//
-//    Eigen::Matrix4f GetPersMatrix() {
-//        float zFar = 150.0f;
-//        float zNear = 0.1f;
-//        float fovY = 10;
-//        float aspect = SCR_WIDTH / SCR_HEIGHT;
-//
-//        Eigen::Matrix4f mProjectionMatrix = Eigen::Matrix4f::Constant(0.0f);
-//        float theta = fovY * 0.5;
-//        float range = zFar - zNear;
-//        float invtan = 1. / tan(theta);
-//
-//        mProjectionMatrix(0, 0) = invtan / aspect;
-//        mProjectionMatrix(1, 1) = invtan;
-//        mProjectionMatrix(2, 2) = -(zNear + zFar) / range;
-//        mProjectionMatrix(3, 2) = -1;
-//        mProjectionMatrix(2, 3) = -2 * zNear * zFar / range;
-//        mProjectionMatrix(3, 3) = 0;
-//        return mProjectionMatrix;
-//    }
-// 
-//};
 
 
 #endif

@@ -8,6 +8,10 @@ float lastFrame = 0.0f;
 
 //model
 Model* magicCube;
+
+//line shader
+Shader* lineShader;
+
 int main() {
     //fps calculate
     float globa_fps=0.0f;
@@ -43,14 +47,15 @@ int main() {
     //shader init
     Shader modelShader("./shaderFiles/modelVertex.glsl", "./shaderFiles/modelFragment.glsl");
 
-
     // load model
+    //Model magicCube_0("./models/cublic.obj");
     Model magicCube_0("./models/bunny.off");
+    //Model magicCube_0("./models/magicCube/magicCube.obj");
     magicCube = &magicCube_0;
     //define light source
     lightSource light;
     light.lightColor[0] = 1; light.lightColor[1] = 1; light.lightColor[2] = 1;
-    light.lightPos[0] = 1; light.lightPos[1] = 200; light.lightPos[2] = 200;
+    light.lightPos[0] = 10; light.lightPos[1] = 100; light.lightPos[2] = 10;
     //camera
     
 
