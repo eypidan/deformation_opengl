@@ -12,9 +12,11 @@ struct controlMove {
 void dataInitial(Mesh* mesh);
 
 //convert a vertex Vectir to Eigen's Matrix
-void convertToEigenMatrix(vector<Vertex> a, MatrixXf& V);
-void convertFromEigenMatrix(vector<Vertex> &a, MatrixXf V);
+void convertToEigenMatrix(vector<Vertex> a, VectorXf& V);
+void convertFromEigenMatrix(vector<Vertex> &a, VectorXf V);
+void converToROIMatrix(Mesh* mesh, VectorXf& V);
 //void calcAdjancyMatrix(Mesh* mesh, SparseMatrix<float>& adj);
 void deform(Mesh* mesh);
 void calcLaplacianCoff(Mesh* mesh, vector<Triplet<float>>& lapCoff); //only cal Roi region
+vector<Triplet<float>> calcEnergyCoff(Mesh* mesh, vector<Triplet<float>>& lapCoff);
 #endif

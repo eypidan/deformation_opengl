@@ -19,11 +19,15 @@ private:
 	unsigned int VBO, EBO;
 	unsigned int VAO_point, VBO_point;
 public:
+	vector<float> lapLength;
 	vector<Vertex> vertices;
 	vector<vector<int>> adjMatrix;
 	vector<unsigned int> ROIindice; //the index of vertex in roi region 
 	vector<unsigned int> handleIndice;
 	vector<unsigned int> formalIndice;
+	vector<Vertex> roiVertices;
+	vector<vector<int>> roiAdjMatrix;
+	map<int, int> roiMap;
 	Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<int>> adjMatrix, vector<unsigned int> ROIv);
 	void updateVertex();
 	void Draw(Shader shader);

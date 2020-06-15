@@ -24,9 +24,9 @@ void Mesh::Draw(Shader shader) {
 	
 	shader.use();
 	//draw point
-	glBindVertexArray(VAO_point);
-	shader.setVec3("color", red);
-	glDrawArrays(GL_POINTS, 0, this->verticesControl.size());
+	//glBindVertexArray(VAO_point);
+	//shader.setVec3("color", red);
+	//glDrawArrays(GL_POINTS, 0, this->verticesControl.size());
 	//set to default
 	glBindVertexArray(0);
 
@@ -51,17 +51,18 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<
 		if(bunny)
 			if (y > 0.1623) this->handleIndice.push_back(index);
 		if(armadillo)
-			if (x < -0.32 && y > 0.22 && z > 0.18) this->handleIndice.push_back(index);;
+			if (x < -0.32 && y > 0.22 && z > 0.18) this->handleIndice.push_back(index);
 	// (x < -0.33) && (y > 0.242) && (z > 0.09)
 	}
 	
-	for (int i = 0; i < this->handleIndice.size(); i++) {
+	/*for (int i = 0; i < this->handleIndice.size(); i++) {
 		ROIindice.erase(std::remove(ROIindice.begin(), ROIindice.end(), this->handleIndice[i]), ROIindice.end());
-	}
+	}*/
 
 	for (int i = 0; i < this->ROIindice.size(); i++) {
 		formalIndice.erase(std::remove(formalIndice.begin(), formalIndice.end(), this->ROIindice[i]), formalIndice.end());
 	}
+
 
 
 	if (bunny || armadillo) {
@@ -120,6 +121,10 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<
 }
 
 void Mesh::updateVertex() {
+	for (int i = 0; i < this->roiVertices.size(); i++) {
+		int formalIndex = this->ROIindice[i];
+		this->vertices[formalIndex] = this->roiVertices[i];
+	}
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_DYNAMIC_DRAW);
@@ -232,8 +237,8 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 			
 	}
 
-	//adj matrix
-	// O(V*F) too slow 
+	////adj matrix
+	//// O(V*F) too slow 
 	//for (int i = 0; i < mesh->mNumVertices; i++){
 	//	vector<int> a;
 	//	

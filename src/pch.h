@@ -22,6 +22,7 @@
 #include <sstream>
 #include <string>
 #include <chrono> 
+#include <cmath> 
 
 #include <stdio.h>
 #include <stdlib.h>
