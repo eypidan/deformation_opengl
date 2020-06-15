@@ -4,8 +4,8 @@ using namespace Eigen;
 
 
 static Eigen::Vector3f yellow , black, red;
-static vector<unsigned int> bunnyControlPoints = { 195,127,71,339,346,581,577,410,587,629,514,260,330,481,717,437,570,165 };
-
+//static vector<unsigned int> bunnyControlPoints = { 195,127,71,339,346,581,577,410,587,629,514,260,330,481,717,437,570,165 };
+vector<unsigned int> bunnyControlPoints = { 430 };
 
 void Mesh::Draw(Shader shader) {
 	
@@ -33,15 +33,36 @@ void Mesh::Draw(Shader shader) {
 }
 
 
-Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices) {
+Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<int>> adjMatrix, vector<unsigned int> ROIv) {
 	this->vertices = vertices;
 	this->indices = indices;
+	this->adjMatrix = adjMatrix;
+	this->ROIindice = ROIv;
+
+	for (int i = 0; i < this->vertices.size(); i++)
+		formalIndice.push_back(i);
+
+	//handle point
+	for (int i = 0; i < this->ROIindice.size(); i++) {
+		int index = this->ROIindice[i];
+		float y = this->vertices[index].Position[1];
+		if (y > 0.1623) this->handleIndice.push_back(index);
+	}
+	
+	for (int i = 0; i < this->handleIndice.size(); i++) {
+		ROIindice.erase(std::remove(ROIindice.begin(), ROIindice.end(), this->handleIndice[i]), ROIindice.end());
+	}
+
+	for (int i = 0; i < this->ROIindice.size(); i++) {
+		formalIndice.erase(std::remove(formalIndice.begin(), formalIndice.end(), this->ROIindice[i]), formalIndice.end());
+	}
+
 
 	if (bunny) {
-		this->indicesControl = bunnyControlPoints;
-		for (int i = 0; i < this->indicesControl.size(); i++) 
-			this->verticesControl.push_back(this->vertices[this->indicesControl[i]]);
 		
+		for (int i = 0; i < bunnyControlPoints.size(); i++)
+			this->verticesControl.push_back(this->vertices[bunnyControlPoints[i]]);
+
 		glGenVertexArrays(1, &VAO_point);
 		glGenBuffers(1, &VBO_point);
 
@@ -88,6 +109,8 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices) {
 	yellow << 0.4 ,0.4 ,0.6;
 	black << 0.0, 0.0, 0.0;
 	red << 1.0, 0.0, 0.0;
+	//data prepare for deformation
+	dataInitial(this);
 }
 
 void Mesh::updateVertex() {
@@ -109,6 +132,25 @@ void Mesh::updateVertex() {
 	//glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vertices[0].Color.data() - (float*)&vertices[0]));
 
 	glBindVertexArray(0);
+
+	if (bunny) {
+		this->verticesControl.clear();
+		for (int i = 0; i < bunnyControlPoints.size(); i++)
+			this->verticesControl.push_back(this->vertices[bunnyControlPoints[i]]);
+
+		glBindVertexArray(VAO_point);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO_point);
+		glBufferData(GL_ARRAY_BUFFER, verticesControl.size() * sizeof(Vertex), &verticesControl[0], GL_STATIC_DRAW);
+
+		// position 
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(verticesControl[0].Position.data() - (float*)&verticesControl[0]));
+		// normal
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(verticesControl[0].Normal.data() - (float*)&verticesControl[0]));
+
+		glBindVertexArray(0);
+	}
 }
 
 
@@ -118,6 +160,7 @@ void Model::Draw(Shader shader) {
 }
 
 Model::Model(string const& path) {
+	//auto start = chrono::high_resolution_clock::now();
 	//read files
 	Assimp::Importer import;
 	const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
@@ -130,6 +173,10 @@ Model::Model(string const& path) {
 
 	//process node recursively
 	processNode(scene->mRootNode, scene);
+	//auto stop = chrono::high_resolution_clock::now();
+	//auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
+
+	//cout << "Load model use : " << duration.count()/1000000.0 << " s" << endl;
 }
 
 
@@ -148,6 +195,7 @@ void Model::processNode(aiNode* node, const aiScene* scene) {
 Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 	vector<Vertex> vertices;
 	vector<unsigned int> indices;
+	vector<vector<int>> adjMatrix;
 
 	for (int i = 0; i < mesh->mNumVertices; i++) {
 		Vertex v;
@@ -178,5 +226,40 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 			
 	}
 
-	return Mesh(vertices, indices);
+	//adj matrix
+	
+	for (int i = 0; i < mesh->mNumVertices; i++){
+		vector<int> a;
+		
+		for (int j = 0; j < mesh->mNumFaces; j++) {
+			aiFace face = mesh->mFaces[j];
+
+			if (face.mIndices[0] == i || face.mIndices[1] == i || face.mIndices[2] == i) {
+				a.push_back(face.mIndices[0]);
+				a.push_back(face.mIndices[1]);
+				a.push_back(face.mIndices[2]);
+			}
+		}
+
+		adjMatrix.push_back(a);
+	}
+	for (int i = 0; i < mesh->mNumVertices; i++) { //remove rundant element
+		std::sort(adjMatrix[i].begin(), adjMatrix[i].end());
+		auto uniIt = std::unique(adjMatrix[i].begin(), adjMatrix[i].end());
+		adjMatrix[i].erase(uniIt, adjMatrix[i].end());
+	}
+
+	//ROI region
+	vector<unsigned int> ROIindice;
+	if (bunny) {
+		//bunny's condition :x0 < -0.055 && y0 > 0.146 && z0 < -0.003
+		for (int i = 0; i < mesh->mNumVertices; i++) {
+			if (vertices[i].Position[0] < -0.055 && vertices[i].Position[1]>0.146 && vertices[i].Position[2] < -0.003)
+				ROIindice.push_back(i);
+		}
+	}
+	
+
+	return Mesh(vertices, indices, adjMatrix, ROIindice);
 }
+

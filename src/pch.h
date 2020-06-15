@@ -13,13 +13,15 @@
 #include <assimp/postprocess.h>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
-
+#include <Eigen/SparseCore>
+#include<Eigen/SparseCholesky>
 
 #include <iostream>
 #include <vector>
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <chrono> 
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,6 +51,7 @@ extern float lastFrame;
 extern float x_angles;
 extern float y_angles;
 extern float z_angles;
+extern float height;
 
 //control point move
 extern controlMove controlMove_0;
@@ -61,3 +64,5 @@ extern double mouseX, mouseY;
 
 //bunny
 extern bool bunny;
+extern vector<unsigned int> bunnyControlPoints;
+extern unsigned int selectedPoint;

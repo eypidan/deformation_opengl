@@ -39,7 +39,7 @@ int main() {
     glfwSetFramebufferSizeCallback(window, frameBufferSizeCallback);
     glfwSetCursorPosCallback(window, mouse_callback);
     //glfwSetCursorPosCallback(window, mouse_callback);
-    //glfwSetScrollCallback(window, scroll_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
