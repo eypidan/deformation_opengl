@@ -47,7 +47,7 @@ void deform(Mesh* mesh) {
 	selectedPoint = bunnyControlPoints[0];
 	for (int i = 0; i < mesh->handleIndice.size(); i++) {
 		int index = mesh->handleIndice[i];
-		mesh->vertices[index].Position[0] += 0.01;
+		mesh->vertices[index].Position[0] += -0.01;
 		mesh->vertices[index].Position[1] += 0.01;
 		mesh->vertices[index].Position[2] += 0.01;
 	}

@@ -16,8 +16,8 @@ Shader* lineShader;
 GLFWwindow* window;
 
 //state flag
-bool bunny;
-
+bool bunny = false;
+bool armadillo = false;
 int main() {
     //fps calculate
     float globa_fps=0.0f;
@@ -66,20 +66,26 @@ int main() {
     int select;
     cout << "Select target model" << endl;
     //cin >> select;
-    select = 1;
+    select = 2;
+    string path = "./models/armadillo_easy.off";
     switch(select) {
     case 1:
         bunny = true;
         // load model
         //Model magicCube_0("./models/cublic.obj");
-    
+        path = "./models/bunny_easy.off";
+        break;
+    case 2:
+        armadillo = true;
+        path = "./models/armadillo_easy.off";
         break;
     default:
-        cout << "bye bye\n";
-        exit(1);
+        armadillo = true;
+        cout << "Use armadillo as default\n";
+        break;
     };
 
-    Model magicCube_0("./models/bunny_easy.off");
+    Model magicCube_0(path);
     //Model magicCube_0("./models/magicCube/magicCube.obj");
     magicCube = &magicCube_0;
     

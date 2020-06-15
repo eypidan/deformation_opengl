@@ -46,7 +46,13 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<
 	for (int i = 0; i < this->ROIindice.size(); i++) {
 		int index = this->ROIindice[i];
 		float y = this->vertices[index].Position[1];
-		if (y > 0.1623) this->handleIndice.push_back(index);
+		float x = this->vertices[index].Position[0];
+		float z = this->vertices[index].Position[2];
+		if(bunny)
+			if (y > 0.1623) this->handleIndice.push_back(index);
+		if(armadillo)
+			if (x < -0.32 && y > 0.22 && z > 0.18) this->handleIndice.push_back(index);;
+	// (x < -0.33) && (y > 0.242) && (z > 0.09)
 	}
 	
 	for (int i = 0; i < this->handleIndice.size(); i++) {
@@ -58,7 +64,7 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<
 	}
 
 
-	if (bunny) {
+	if (bunny || armadillo) {
 		
 		for (int i = 0; i < bunnyControlPoints.size(); i++)
 			this->verticesControl.push_back(this->vertices[bunnyControlPoints[i]]);
@@ -227,22 +233,40 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 	}
 
 	//adj matrix
-	
-	for (int i = 0; i < mesh->mNumVertices; i++){
+	// O(V*F) too slow 
+	//for (int i = 0; i < mesh->mNumVertices; i++){
+	//	vector<int> a;
+	//	
+	//	for (int j = 0; j < mesh->mNumFaces; j++) {
+	//		aiFace face = mesh->mFaces[j];
+
+	//		if (face.mIndices[0] == i || face.mIndices[1] == i || face.mIndices[2] == i) {
+	//			a.push_back(face.mIndices[0]);
+	//			a.push_back(face.mIndices[1]);
+	//			a.push_back(face.mIndices[2]);
+	//		}
+	//	}
+
+	//	adjMatrix.push_back(a);
+	//}
+
+	//adj matrix
+	for (int i = 0; i < mesh->mNumVertices; i++) {
 		vector<int> a;
-		
-		for (int j = 0; j < mesh->mNumFaces; j++) {
-			aiFace face = mesh->mFaces[j];
-
-			if (face.mIndices[0] == i || face.mIndices[1] == i || face.mIndices[2] == i) {
-				a.push_back(face.mIndices[0]);
-				a.push_back(face.mIndices[1]);
-				a.push_back(face.mIndices[2]);
-			}
-		}
-
 		adjMatrix.push_back(a);
 	}
+
+	for (int i = 0; i < mesh->mNumFaces; i++) {
+		aiFace face = mesh->mFaces[i];
+		for (int j = 0; j < face.mNumIndices; j++) {
+			int index = face.mIndices[j];
+			int index_1 = face.mIndices[(j + 1) % 3];
+			int index_2 = face.mIndices[(j + 2) % 3];
+			adjMatrix[index].push_back(index_1);
+			adjMatrix[index].push_back(index_2);
+		}
+	}
+
 	for (int i = 0; i < mesh->mNumVertices; i++) { //remove rundant element
 		std::sort(adjMatrix[i].begin(), adjMatrix[i].end());
 		auto uniIt = std::unique(adjMatrix[i].begin(), adjMatrix[i].end());
@@ -255,6 +279,12 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 		//bunny's condition :x0 < -0.055 && y0 > 0.146 && z0 < -0.003
 		for (int i = 0; i < mesh->mNumVertices; i++) {
 			if (vertices[i].Position[0] < -0.055 && vertices[i].Position[1]>0.146 && vertices[i].Position[2] < -0.003)
+				ROIindice.push_back(i);
+		}
+	}
+	if (armadillo) {
+		for (int i = 0; i < mesh->mNumVertices; i++) {
+			if (vertices[i].Position[0] < -0.25)
 				ROIindice.push_back(i);
 		}
 	}

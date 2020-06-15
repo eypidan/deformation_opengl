@@ -66,3 +66,6 @@ extern double mouseX, mouseY;
 extern bool bunny;
 extern vector<unsigned int> bunnyControlPoints;
 extern unsigned int selectedPoint;
+
+//armadillo
+extern bool armadillo;
