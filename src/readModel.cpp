@@ -9,14 +9,14 @@ vector<unsigned int> bunnyControlPoints = { 430 };
 
 void Mesh::Draw(Shader shader) {
 	
-	// draw mesh
-	glBindVertexArray(VAO);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glLineWidth(3.0f);
-	shader.setVec3("color", black);
-	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+	// draw line
+	//glBindVertexArray(VAO);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glLineWidth(3.0f);
+	//shader.setVec3("color", black);
+	//glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	
-	//draw line
+	//draw mesh
 	glBindVertexArray(VAO);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	shader.setVec3("color", yellow);
@@ -24,10 +24,10 @@ void Mesh::Draw(Shader shader) {
 	
 	shader.use();
 	//draw point
-	//glBindVertexArray(VAO_point);
-	//shader.setVec3("color", red);
-	//glDrawArrays(GL_POINTS, 0, this->verticesControl.size());
-	//set to default
+	glBindVertexArray(VAO_point);
+	shader.setVec3("color", red);
+	glDrawArrays(GL_POINTS, 0, this->roiVertices.size());
+	//set to defaulte
 	glBindVertexArray(0);
 
 }
@@ -55,35 +55,39 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<
 	// (x < -0.33) && (y > 0.242) && (z > 0.09)
 	}
 	
-	/*for (int i = 0; i < this->handleIndice.size(); i++) {
+	for (int i = 0; i < this->handleIndice.size(); i++) {
 		ROIindice.erase(std::remove(ROIindice.begin(), ROIindice.end(), this->handleIndice[i]), ROIindice.end());
-	}*/
+	}
 
 	for (int i = 0; i < this->ROIindice.size(); i++) {
 		formalIndice.erase(std::remove(formalIndice.begin(), formalIndice.end(), this->ROIindice[i]), formalIndice.end());
 	}
 
+	//add roi data into 
+	for (int i = 0; i < this->ROIindice.size(); i++) {
 
+		int index = this->ROIindice[i];
+		Vertex currentV = this->vertices[index];
+		this->roiVertices.push_back(currentV);
+		this->roiMap[index] = i;
+	}
 
 	if (bunny || armadillo) {
 		
-		for (int i = 0; i < bunnyControlPoints.size(); i++)
-			this->verticesControl.push_back(this->vertices[bunnyControlPoints[i]]);
-
 		glGenVertexArrays(1, &VAO_point);
 		glGenBuffers(1, &VBO_point);
 
 
 		glBindVertexArray(VAO_point);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO_point);
-		glBufferData(GL_ARRAY_BUFFER, verticesControl.size() * sizeof(Vertex), &verticesControl[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, roiVertices.size() * sizeof(Vertex), &roiVertices[0], GL_STATIC_DRAW);
 	
 		// position 
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(verticesControl[0].Position.data() - (float*)&verticesControl[0]));
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(roiVertices[0].Position.data() - (float*)&roiVertices[0]));
 		// normal
 		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(verticesControl[0].Normal.data() - (float*)&verticesControl[0]));
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(roiVertices[0].Normal.data() - (float*)&roiVertices[0]));
 
 		glBindVertexArray(0);
 	}
@@ -144,21 +148,19 @@ void Mesh::updateVertex() {
 
 	glBindVertexArray(0);
 
-	if (bunny) {
-		this->verticesControl.clear();
-		for (int i = 0; i < bunnyControlPoints.size(); i++)
-			this->verticesControl.push_back(this->vertices[bunnyControlPoints[i]]);
+	if (bunny || armadillo) {
+		
 
 		glBindVertexArray(VAO_point);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO_point);
-		glBufferData(GL_ARRAY_BUFFER, verticesControl.size() * sizeof(Vertex), &verticesControl[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, roiVertices.size() * sizeof(Vertex), &roiVertices[0], GL_DYNAMIC_DRAW);
 
 		// position 
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(verticesControl[0].Position.data() - (float*)&verticesControl[0]));
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(roiVertices[0].Position.data() - (float*)&roiVertices[0]));
 		// normal
 		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(verticesControl[0].Normal.data() - (float*)&verticesControl[0]));
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(roiVertices[0].Normal.data() - (float*)&roiVertices[0]));
 
 		glBindVertexArray(0);
 	}
@@ -289,7 +291,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 	}
 	if (armadillo) {
 		for (int i = 0; i < mesh->mNumVertices; i++) {
-			if (vertices[i].Position[0] < -0.25)
+			if (vertices[i].Position[0] < -0.25 && vertices[i].Position[1] > 0.048)
 				ROIindice.push_back(i);
 		}
 	}

@@ -46,8 +46,7 @@ void processInput(GLFWwindow* window)
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		controlMove_0.y -= 5;
-		//test(&magicCube->meshes[0]);
+		deform(&magicCube->meshes[0]);
 	}
 	
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {

@@ -64,7 +64,7 @@ int main() {
     light.lightPos[0] = 10; light.lightPos[1] = 100; light.lightPos[2] = 10;
     
     int select;
-    cout << "Select target model" << endl;
+    //cout << "Select target model" << endl;
     //cin >> select;
     select = 2;
     string path = "./models/armadillo_easy.off";

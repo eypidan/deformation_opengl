@@ -6,21 +6,14 @@ using namespace Eigen;
 static vector<Triplet<float>> originLaplacian,energe;
 static SparseMatrix<float> LCoffMatrix, lengthKeep, lapNormalizeTrans, energyMatrix , energyMatrixTrans;
 static VectorXf roiVertexMatrix, roiMatrix, LapCoordinate, solution;
-static SimplicialLLT<SparseMatrix<float>> solver, lengthKeepSolver;
+static SimplicialLLT<SparseMatrix<float>> solver, lengthKeepSolver ,debugSolver ;
 
 
 unsigned int selectedPoint;
 
 
 void dataInitial(Mesh* mesh) {
-	//add roi data into 
-	for (int i = 0; i < mesh->ROIindice.size(); i++) {
 
-		int index = mesh->ROIindice[i];
-		Vertex currentV = mesh->vertices[index];
-		mesh->roiVertices.push_back(currentV);
-		mesh->roiMap[index] = i;
-	}
 
 	//roi vertice's adjancy Matrix
 	for (int i = 0; i < mesh->ROIindice.size(); i++) {
@@ -69,7 +62,7 @@ void dataInitial(Mesh* mesh) {
 		mesh->lapLength.push_back(currentLength);
 		//lapLength related to ROI indces
 	}
-	
+	energe = originLaplacian;
 	////calculate energy matrix
 	//energe = calcEnergyCoff(mesh, originLaplacian);
 
@@ -97,20 +90,24 @@ void dataInitial(Mesh* mesh) {
 
 
 	int handleSize = mesh->handleIndice.size();
-	//L = LCoffMatrix* roiVertexMatrix;
+
 	energyMatrix.resize((roiVerticeSize+ handleSize) * 3, roiVerticeSize * 3);
 	energyMatrix.reserve(10 * (roiVerticeSize + handleSize) * 3);
+
+
 	energyMatrix.setFromTriplets(energe.begin(), energe.end());
 	energyMatrixTrans = energyMatrix.transpose();
+
+	
+	//debugSolver.compute(LCoffMatrix);
+	auto start = chrono::high_resolution_clock::now();
+
 	solver.compute(energyMatrixTrans * energyMatrix);
 
-	//auto start = chrono::high_resolution_clock::now();
+	auto stop = chrono::high_resolution_clock::now();
+	auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
 
-
-	//auto stop = chrono::high_resolution_clock::now();
-	//auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
-
-	//std::cout << "Factorizating engery matrix use : " << duration.count() / (double)1000000.0 << " s" << endl;
+	std::cout << "Factorizating engery matrix use : " << duration.count() / (double)1000000.0 << " s" << endl;
 }
 
 
@@ -250,31 +247,38 @@ vector<Triplet<float>> calcEnergyCoff(Mesh *mesh, vector<Triplet<float>>& lapCof
 
 void deform(Mesh* mesh) {
 	auto start = chrono::high_resolution_clock::now();
+	VectorXf b(3*(mesh->roiVertices.size()+mesh->handleIndice.size()));
+	//VectorXf b(3 * (mesh->roiVertices.size()));
+	int count = 0;
+	for (int i = 0; i < LapCoordinate.size(); i++) {
+		b[count++] = LapCoordinate[i];
+	}
 
-	selectedPoint = bunnyControlPoints[0];
 	for (int i = 0; i < mesh->handleIndice.size(); i++) {
 		int index = mesh->handleIndice[i];
-		int index_in_roi = mesh->roiMap[index];
-		mesh->roiVertices[index_in_roi].Position[0] += -0.01;
-		mesh->roiVertices[index_in_roi].Position[1] += 0.01;
-		mesh->roiVertices[index_in_roi].Position[2] += 0.01;
+		//int index_in_roi = mesh->roiMap[index];
+		mesh->vertices[index].Position[0] -= 0.01;
+		mesh->vertices[index].Position[1] += 0.01;
+		mesh->vertices[index].Position[2] += 0.01;
+
+		b[count++] = mesh->vertices[index].Position[0];
+		b[count++] = mesh->vertices[index].Position[1];
+		b[count++] = mesh->vertices[index].Position[2];
 	}
-	
-	/*for (int i = 0; i < mesh->ROIindice.size(); i++) {
-		int index = mesh->ROIindice[i];
-		mesh->vertices[index].Position[0] += 0;
-		mesh->vertices[index].Position[1] += 0;
-		mesh->vertices[index].Position[2] += 0;
-	}*/
 
-	convertToEigenMatrix(mesh->vertices, roiVertexMatrix);
+	////DEBUG
+	//VectorXf debugSoulution;
+	//debugSoulution = debugSolver.solve(b);
+	//convertFromEigenMatrix(mesh->roiVertices, debugSoulution);
+	//mesh->updateVertex();
+	//return;
 
-	solution = solver.solve(energyMatrixTrans * energyMatrix * roiVertexMatrix);
-	convertFromEigenMatrix(mesh->vertices, solution);
-	
-	std::cout << "DEBUG:: change: " << (solution - roiVertexMatrix).norm() << endl;
-
+	solution = solver.solve(energyMatrixTrans * b);
+	convertFromEigenMatrix(mesh->roiVertices, solution);
 	mesh->updateVertex();
+	
+	//std::cout << "DEBUG:: change: " << (energyMatrixTrans * energyMatrix * solution - energyMatrixTrans * b).norm() << endl;
+
 
 	auto stop = chrono::high_resolution_clock::now();
 	auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
@@ -294,7 +298,7 @@ void calcLaplacianCoff(Mesh* mesh, vector<Triplet<float>>& lapCoff) {
 			int j_index = mesh->roiAdjMatrix[i][j];
 			
 			for (int k = 0; k < 3; k++) {
-				lapCoff.push_back(Triplet<float>(i * 3 + k, j_index * 3 + k, -0.01));
+				lapCoff.push_back(Triplet<float>(i * 3 + k, j_index*3 + k, weight/10.0));
 			}
 		}
 		lapCoff.push_back(Triplet<float>(i * 3 + 0, i * 3 + 0, 1.0));
