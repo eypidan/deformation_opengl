@@ -16,7 +16,7 @@ void convertToEigenMatrix(vector<Vertex> a, VectorXf& V);
 void convertFromEigenMatrix(vector<Vertex> &a, VectorXf V);
 void converToROIMatrix(Mesh* mesh, VectorXf& V);
 //void calcAdjancyMatrix(Mesh* mesh, SparseMatrix<float>& adj);
-void deform(Mesh* mesh);
+void deform(Mesh* mesh,float x, float y, float z);
 void calcLaplacianCoff(Mesh* mesh, vector<Triplet<float>>& lapCoff); //only cal Roi region
 vector<Triplet<float>> calcEnergyCoff(Mesh* mesh, vector<Triplet<float>>& lapCoff);
 #endif

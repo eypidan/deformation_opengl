@@ -41,23 +41,19 @@ void processInput(GLFWwindow* window)
 	}
 		
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		controlMove_0.y += 5;
+		deform(&magicCube->meshes[0], -0.01, 0.02, -0.01);
 		//test(&magicCube->meshes[0]);
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		deform(&magicCube->meshes[0]);
+		deform(&magicCube->meshes[0], -0.01, 0.01, 0.01);
 	}
 	
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		controlMove_0.y -= 5;
-		//test(&magicCube->meshes[0]);
-	}
 
 	bool spaceAction = glfwGetKey(window, GLFW_KEY_SPACE);
 	if (spaceAction == GLFW_RELEASE && oldSpace == GLFW_PRESS) {
 
-		deform(&magicCube->meshes[0]);
+		deform(&magicCube->meshes[0], - 0.01, 0.01, 0.01);
 	}
 	oldSpace = spaceAction;
 }

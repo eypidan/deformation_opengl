@@ -16,18 +16,7 @@ void dataInitial(Mesh* mesh) {
 
 
 	//roi vertice's adjancy Matrix
-	for (int i = 0; i < mesh->ROIindice.size(); i++) {
-		int index = mesh->ROIindice[i];
-		
-		vector<int> currentAdj;
-		for (int j = 0; j < mesh->adjMatrix[index].size(); j++) {
-			int formalKey = mesh->adjMatrix[index][j];
-			if(mesh->roiMap.find(formalKey) != mesh->roiMap.end()){ //find
-				currentAdj.push_back(mesh->roiMap[formalKey]);
-			}
-		}
-		mesh->roiAdjMatrix.push_back(currentAdj);
-	}
+	
 
 	int roiVerticeSize = mesh->roiVertices.size();
 
@@ -79,7 +68,8 @@ void dataInitial(Mesh* mesh) {
 	//lengthKeepSolver.compute(lapNormalizeTrans * lengthKeep);
 
 	//handle constrained
-	for (int i = 0; i < mesh->handleIndice.size(); i++) {
+	//for (int i = 0; i < mesh->handleIndice.size(); i++) {
+	for (int i = 0; i < 1; i++) {
 		int index = mesh->handleIndice[i];
 		int index_in_roi = mesh->roiMap[index];
 		int roiLength = 3 * roiVerticeSize;
@@ -90,7 +80,7 @@ void dataInitial(Mesh* mesh) {
 
 
 	int handleSize = mesh->handleIndice.size();
-
+	handleSize = 1;//DEBUG
 	energyMatrix.resize((roiVerticeSize+ handleSize) * 3, roiVerticeSize * 3);
 	energyMatrix.reserve(10 * (roiVerticeSize + handleSize) * 3);
 
@@ -99,7 +89,8 @@ void dataInitial(Mesh* mesh) {
 	energyMatrixTrans = energyMatrix.transpose();
 
 	
-	//debugSolver.compute(LCoffMatrix);
+	//debugSolver.compute(LCoffMatrix.transpose() * LCoffMatrix);
+
 	auto start = chrono::high_resolution_clock::now();
 
 	solver.compute(energyMatrixTrans * energyMatrix);
@@ -107,7 +98,7 @@ void dataInitial(Mesh* mesh) {
 	auto stop = chrono::high_resolution_clock::now();
 	auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
 
-	std::cout << "Factorizating engery matrix use : " << duration.count() / (double)1000000.0 << " s" << endl;
+	std::cout << "Factorizating engery matrix use : " << duration.count() << " ms" << endl;
 }
 
 
@@ -245,30 +236,47 @@ vector<Triplet<float>> calcEnergyCoff(Mesh *mesh, vector<Triplet<float>>& lapCof
 }
 
 
-void deform(Mesh* mesh) {
+void deform(Mesh* mesh,float x,float y,float z) {
 	auto start = chrono::high_resolution_clock::now();
-	VectorXf b(3*(mesh->roiVertices.size()+mesh->handleIndice.size()));
-	//VectorXf b(3 * (mesh->roiVertices.size()));
+	//VectorXf b(3*(mesh->roiVertices.size()+mesh->handleIndice.size()));
+	VectorXf b(3 * (mesh->roiVertices.size()+1));
 	int count = 0;
 	for (int i = 0; i < LapCoordinate.size(); i++) {
 		b[count++] = LapCoordinate[i];
 	}
 
-	for (int i = 0; i < mesh->handleIndice.size(); i++) {
-		int index = mesh->handleIndice[i];
-		//int index_in_roi = mesh->roiMap[index];
-		mesh->vertices[index].Position[0] -= 0.01;
-		mesh->vertices[index].Position[1] += 0.01;
-		mesh->vertices[index].Position[2] += 0.01;
+	//DEBUG
+	mesh->roiVertices[0].Position[0] += 0.1;
+	b[count++] = mesh->roiVertices[0].Position[0];
+	b[count++] = mesh->roiVertices[0].Position[1];
+	b[count++] = mesh->roiVertices[0].Position[2];
 
-		b[count++] = mesh->vertices[index].Position[0];
-		b[count++] = mesh->vertices[index].Position[1];
-		b[count++] = mesh->vertices[index].Position[2];
-	}
+	//for (int i = 0; i < mesh->handleIndice.size(); i++) {
+	//	int index = mesh->handleIndice[i];
+	//	//int index_in_roi = mesh->roiMap[index];
+	//	mesh->vertices[index].Position[0] += x;
+	//	mesh->vertices[index].Position[1] += y;
+	//	mesh->vertices[index].Position[2] += z;
+
+	//	b[count++] = mesh->vertices[index].Position[0];
+	//	b[count++] = mesh->vertices[index].Position[1];
+	//	b[count++] = mesh->vertices[index].Position[2];
+	//}
 
 	////DEBUG
 	//VectorXf debugSoulution;
-	//debugSoulution = debugSolver.solve(b);
+	//debugSoulution = debugSolver.solve(LCoffMatrix.transpose()*b);
+
+	//for (int i = 100; i < 110; i++) {
+	//	auto deltt = roiVertexMatrix[i] - debugSoulution[i];
+	//	cout << roiVertexMatrix[i] << endl;
+	//	cout << debugSoulution[i] << endl;
+	//	cout <<"dealt:::" <<deltt <<endl << endl;
+	//}
+	//auto sub1 = (LCoffMatrix.transpose() * LCoffMatrix * debugSoulution - LCoffMatrix.transpose() * b).norm();
+	//cout << "sub1 ::" << sub1 << endl;
+	//auto sub2 = (LCoffMatrix.transpose() * LCoffMatrix * roiVertexMatrix - LCoffMatrix.transpose() * b).norm();
+	//cout << "sub2 ::" << sub2 << endl;
 	//convertFromEigenMatrix(mesh->roiVertices, debugSoulution);
 	//mesh->updateVertex();
 	//return;
@@ -283,7 +291,7 @@ void deform(Mesh* mesh) {
 	auto stop = chrono::high_resolution_clock::now();
 	auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
 
-	std::cout << "Deform use : " << duration.count() / 1000000.0 << " s" << endl;
+	std::cout << "Deform use : " << duration.count()   << " ms" << endl;
 }
 
 void calcLaplacianCoff(Mesh* mesh, vector<Triplet<float>>& lapCoff) {
@@ -298,7 +306,7 @@ void calcLaplacianCoff(Mesh* mesh, vector<Triplet<float>>& lapCoff) {
 			int j_index = mesh->roiAdjMatrix[i][j];
 			
 			for (int k = 0; k < 3; k++) {
-				lapCoff.push_back(Triplet<float>(i * 3 + k, j_index*3 + k, weight/10.0));
+				lapCoff.push_back(Triplet<float>(i * 3 + k, j_index*3 + k, weight));
 			}
 		}
 		lapCoff.push_back(Triplet<float>(i * 3 + 0, i * 3 + 0, 1.0));

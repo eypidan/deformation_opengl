@@ -17,7 +17,7 @@ private:
 	vector<unsigned int>indices;
 	unsigned int VAO;
 	unsigned int VBO, EBO;
-	unsigned int VAO_point, VBO_point;
+	unsigned int VAO_point[3], VBO_point[3];
 public:
 	vector<float> lapLength;
 	vector<Vertex> vertices;
@@ -27,6 +27,9 @@ public:
 	vector<unsigned int> formalIndice;
 	vector<Vertex> roiVertices;
 	vector<vector<int>> roiAdjMatrix;
+
+	vector<int> edgeIndice;
+	vector<Vertex> edgeVertices;
 	map<int, int> roiMap;
 	Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<int>> adjMatrix, vector<unsigned int> ROIv);
 	void updateVertex();

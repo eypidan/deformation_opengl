@@ -3,18 +3,18 @@
 using namespace Eigen;
 
 
-static Eigen::Vector3f yellow , black, red;
+static Eigen::Vector3f yellow , black, red,green;
 //static vector<unsigned int> bunnyControlPoints = { 195,127,71,339,346,581,577,410,587,629,514,260,330,481,717,437,570,165 };
 vector<unsigned int> bunnyControlPoints = { 430 };
 
 void Mesh::Draw(Shader shader) {
 	
 	// draw line
-	//glBindVertexArray(VAO);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	//glLineWidth(3.0f);
-	//shader.setVec3("color", black);
-	//glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(VAO);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glLineWidth(3.0f);
+	shader.setVec3("color", black);
+	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	
 	//draw mesh
 	glBindVertexArray(VAO);
@@ -24,9 +24,13 @@ void Mesh::Draw(Shader shader) {
 	
 	shader.use();
 	//draw point
-	glBindVertexArray(VAO_point);
-	shader.setVec3("color", red);
-	glDrawArrays(GL_POINTS, 0, this->roiVertices.size());
+	//glBindVertexArray(VAO_point[0]);
+	//shader.setVec3("color", red);
+	//glDrawArrays(GL_POINTS, 0, this->roiVertices.size());
+
+	glBindVertexArray(VAO_point[1]);
+	shader.setVec3("color", green);
+	glDrawArrays(GL_POINTS, 0, this->edgeVertices.size());
 	//set to defaulte
 	glBindVertexArray(0);
 
@@ -68,26 +72,64 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<
 
 		int index = this->ROIindice[i];
 		Vertex currentV = this->vertices[index];
+		vector<int> currentAdj;
 		this->roiVertices.push_back(currentV);
 		this->roiMap[index] = i;
 	}
 
+	//roi's adjency matrix
+	for (int i = 0; i < this->ROIindice.size(); i++) {
+		int index = this->ROIindice[i];
+		vector<int> currentAdj;
+		
+		for (int j = 0; j < this->adjMatrix[index].size(); j++) {
+			int formalKey = this->adjMatrix[index][j];
+			if (this->roiMap.find(formalKey) != this->roiMap.end()) { //find
+				currentAdj.push_back(this->roiMap[formalKey]);
+			}
+			else edgeIndice.push_back(index);
+		}
+		this->roiAdjMatrix.push_back(currentAdj);
+	}
+	//remove duplicate vertex in edgeIndice
+	std::sort(edgeIndice.begin(), edgeIndice.end());
+	auto uniIt = std::unique(edgeIndice.begin(), edgeIndice.end());
+	edgeIndice.erase(uniIt, edgeIndice.end());
+	for (int i = 0; i < edgeIndice.size(); i++) {
+		int index = edgeIndice[i];
+		this->edgeVertices.push_back(this->vertices[index]);
+	}
+
 	if (bunny || armadillo) {
 		
-		glGenVertexArrays(1, &VAO_point);
-		glGenBuffers(1, &VBO_point);
+		glGenVertexArrays(3, VAO_point);
+		glGenBuffers(3, VBO_point);
 
-
-		glBindVertexArray(VAO_point);
-		glBindBuffer(GL_ARRAY_BUFFER, VBO_point);
-		glBufferData(GL_ARRAY_BUFFER, roiVertices.size() * sizeof(Vertex), &roiVertices[0], GL_STATIC_DRAW);
-	
-		// position 
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(roiVertices[0].Position.data() - (float*)&roiVertices[0]));
-		// normal
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(roiVertices[0].Normal.data() - (float*)&roiVertices[0]));
+		for (int i = 0; i < 3; i++) {
+			glBindVertexArray(VAO_point[i]);
+			glBindBuffer(GL_ARRAY_BUFFER, VBO_point[i]);
+			
+			if (i == 0) {
+				glBufferData(GL_ARRAY_BUFFER, roiVertices.size() * sizeof(Vertex), &roiVertices[0], GL_STATIC_DRAW);
+				// position 
+				glEnableVertexAttribArray(0);
+				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(roiVertices[0].Position.data() - (float*)&roiVertices[0]));
+				// normal
+				glEnableVertexAttribArray(1);
+				glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(roiVertices[0].Normal.data() - (float*)&roiVertices[0]));
+			}
+			
+			if (i == 1) {
+				glBufferData(GL_ARRAY_BUFFER, edgeVertices.size() * sizeof(Vertex), &edgeVertices[0], GL_STATIC_DRAW);
+				// position 
+				glEnableVertexAttribArray(0);
+				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(edgeVertices[0].Position.data() - (float*)&edgeVertices[0]));
+				// normal
+				glEnableVertexAttribArray(1);
+				glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(edgeVertices[0].Normal.data() - (float*)&edgeVertices[0]));
+			}
+		}
+		
 
 		glBindVertexArray(0);
 	}
@@ -118,6 +160,7 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<
 	
 	glBindVertexArray(0);
 	yellow << 0.4 ,0.4 ,0.6;
+	green << 0.0, 1.0, 0.0;
 	black << 0.0, 0.0, 0.0;
 	red << 1.0, 0.0, 0.0;
 	//data prepare for deformation
@@ -126,6 +169,7 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<
 
 void Mesh::updateVertex() {
 	for (int i = 0; i < this->roiVertices.size(); i++) {
+		
 		int formalIndex = this->ROIindice[i];
 		this->vertices[formalIndex] = this->roiVertices[i];
 	}
@@ -151,8 +195,8 @@ void Mesh::updateVertex() {
 	if (bunny || armadillo) {
 		
 
-		glBindVertexArray(VAO_point);
-		glBindBuffer(GL_ARRAY_BUFFER, VBO_point);
+		glBindVertexArray(VAO_point[0]);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO_point[0]);
 		glBufferData(GL_ARRAY_BUFFER, roiVertices.size() * sizeof(Vertex), &roiVertices[0], GL_DYNAMIC_DRAW);
 
 		// position 
@@ -265,7 +309,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 
 	for (int i = 0; i < mesh->mNumFaces; i++) {
 		aiFace face = mesh->mFaces[i];
-		for (int j = 0; j < face.mNumIndices; j++) {
+		for (int j = 0; j < 3; j++) {
 			int index = face.mIndices[j];
 			int index_1 = face.mIndices[(j + 1) % 3];
 			int index_2 = face.mIndices[(j + 2) % 3];
