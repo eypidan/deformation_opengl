@@ -24,9 +24,9 @@ void Mesh::Draw(Shader shader) {
 	
 	shader.use();
 	//draw point
-	//glBindVertexArray(VAO_point[0]);
-	//shader.setVec3("color", red);
-	//glDrawArrays(GL_POINTS, 0, this->roiVertices.size());
+	glBindVertexArray(VAO_point[0]);
+	shader.setVec3("color", red);
+	glDrawArrays(GL_POINTS, 0, this->lapVetices.size());
 
 	glBindVertexArray(VAO_point[1]);
 	shader.setVec3("color", green);
@@ -42,9 +42,6 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<
 	this->indices = indices;
 	this->adjMatrix = adjMatrix;
 	this->ROIindice = ROIv;
-
-	for (int i = 0; i < this->vertices.size(); i++)
-		formalIndice.push_back(i);
 
 	//handle point
 	for (int i = 0; i < this->ROIindice.size(); i++) {
@@ -63,42 +60,93 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<
 		ROIindice.erase(std::remove(ROIindice.begin(), ROIindice.end(), this->handleIndice[i]), ROIindice.end());
 	}
 
-	for (int i = 0; i < this->ROIindice.size(); i++) {
-		formalIndice.erase(std::remove(formalIndice.begin(), formalIndice.end(), this->ROIindice[i]), formalIndice.end());
+	// *** find edges vertex in roiVertices *** BEGIN
+	
+	for (int i = 0; i < ROIindice.size(); i++) {
+		int index = ROIindice[i];
 	}
 
-	//add roi data into 
+	//build map relation between ROI and model's vertices 
 	for (int i = 0; i < this->ROIindice.size(); i++) {
-
 		int index = this->ROIindice[i];
-		Vertex currentV = this->vertices[index];
-		vector<int> currentAdj;
-		this->roiVertices.push_back(currentV);
 		this->roiMap[index] = i;
 	}
 
-	//roi's adjency matrix
+	//use adjency matrix to find the edge 
 	for (int i = 0; i < this->ROIindice.size(); i++) {
 		int index = this->ROIindice[i];
-		vector<int> currentAdj;
-		
-		for (int j = 0; j < this->adjMatrix[index].size(); j++) {
-			int formalKey = this->adjMatrix[index][j];
-			if (this->roiMap.find(formalKey) != this->roiMap.end()) { //find
-				currentAdj.push_back(this->roiMap[formalKey]);
+		bool flag = true;
+		for (int j = 0; j < this->adjMatrix[index].size() && flag; j++) {
+			int adjVertexKey = this->adjMatrix[index][j];
+			if (this->roiMap.find(adjVertexKey) == this->roiMap.end()) {
+				edgeIndice.push_back(index); //find edge veretx
+				flag = false;
 			}
-			else edgeIndice.push_back(index);
 		}
-		this->roiAdjMatrix.push_back(currentAdj);
 	}
-	//remove duplicate vertex in edgeIndice
-	std::sort(edgeIndice.begin(), edgeIndice.end());
-	auto uniIt = std::unique(edgeIndice.begin(), edgeIndice.end());
-	edgeIndice.erase(uniIt, edgeIndice.end());
+	//divide edge connect to handle and edge connect to body
+	vector<int> edgeHandle, edgeBody; // the edge besides handle part and body part
+	for (int i = 0; i < edgeIndice.size(); i++) {
+		int index = edgeIndice[i];
+		if (vertices[index].Position[0] > -0.3435 && vertices[index].Position[1] < 0.21877)
+			edgeBody.push_back(index);
+		else
+			edgeHandle.push_back(index);
+	}
+	edgeIndice.clear();
+	edgeIndice.assign(edgeHandle.begin(), edgeHandle.end());
+	edgeIndice.insert(edgeIndice.end(), edgeBody.begin(), edgeBody.end());
+	
+	// *** find edges vertex in roiVertices *** END
+
+	//the vertices that are unconstrianed
+	lapIndices = ROIindice;
+	for (int i = 0; i < this->edgeIndice.size(); i++) {
+		lapIndices.erase(std::remove(lapIndices.begin(), lapIndices.end(), this->edgeIndice[i]), lapIndices.end());
+	}
+
+	//ADD BACK TO ROI
+	ROIindice.clear();
+	ROIindice.assign(edgeIndice.begin(), edgeIndice.end());
+	ROIindice.insert(ROIindice.end(), lapIndices.begin(), lapIndices.end());
+	
+	//build roi Vertices' adjency matrix
+	roiMap.clear();
+	for (int i = 0; i < this->ROIindice.size(); i++) {
+		int index = this->ROIindice[i];
+		this->roiMap[index] = i;
+	}
+
+	//use adjency matrix to find the edge 
+
+	for (int i = 0; i < this->ROIindice.size(); i++) {
+		int index = this->ROIindice[i];
+		vector<unsigned int> currentAdj;
+		for (int j = 0; j < this->adjMatrix[index].size(); j++) {
+			int adjVertexKey = this->adjMatrix[index][j];
+			if (this->roiMap.find(adjVertexKey) != this->roiMap.end()) {
+				currentAdj.push_back(this->roiMap[adjVertexKey]);
+			}
+		}
+		roiAdjMatrix.push_back(currentAdj);
+	}
+	//divi
+	//assign vertex value to mesh object
 	for (int i = 0; i < edgeIndice.size(); i++) {
 		int index = edgeIndice[i];
 		this->edgeVertices.push_back(this->vertices[index]);
 	}
+	for (int i = 0; i < ROIindice.size(); i++) {
+		int index = ROIindice[i];
+		this->roiVertices.push_back(this->vertices[index]);
+	}
+	for (int i = 0; i < lapIndices.size(); i++) {
+		int index = lapIndices[i];
+		this->lapVetices.push_back(this->vertices[index]);
+	}
+	this->edgeConnectBody = edgeBody.size();
+	this->edgeConnectHandle = edgeHandle.size();
+
 
 	if (bunny || armadillo) {
 		
@@ -110,17 +158,17 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<
 			glBindBuffer(GL_ARRAY_BUFFER, VBO_point[i]);
 			
 			if (i == 0) {
-				glBufferData(GL_ARRAY_BUFFER, roiVertices.size() * sizeof(Vertex), &roiVertices[0], GL_STATIC_DRAW);
+				glBufferData(GL_ARRAY_BUFFER, lapVetices.size() * sizeof(Vertex), &lapVetices[0], GL_DYNAMIC_DRAW);
 				// position 
 				glEnableVertexAttribArray(0);
-				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(roiVertices[0].Position.data() - (float*)&roiVertices[0]));
+				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(lapVetices[0].Position.data() - (float*)&lapVetices[0]));
 				// normal
 				glEnableVertexAttribArray(1);
-				glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(roiVertices[0].Normal.data() - (float*)&roiVertices[0]));
+				glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(lapVetices[0].Normal.data() - (float*)&lapVetices[0]));
 			}
 			
 			if (i == 1) {
-				glBufferData(GL_ARRAY_BUFFER, edgeVertices.size() * sizeof(Vertex), &edgeVertices[0], GL_STATIC_DRAW);
+				glBufferData(GL_ARRAY_BUFFER, edgeVertices.size() * sizeof(Vertex), &edgeVertices[0], GL_DYNAMIC_DRAW);
 				// position 
 				glEnableVertexAttribArray(0);
 				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(edgeVertices[0].Position.data() - (float*)&edgeVertices[0]));
@@ -168,11 +216,22 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<
 }
 
 void Mesh::updateVertex() {
+
 	for (int i = 0; i < this->roiVertices.size(); i++) {
-		
 		int formalIndex = this->ROIindice[i];
 		this->vertices[formalIndex] = this->roiVertices[i];
 	}
+
+	for (int i = 0; i < this->lapIndices.size(); i++) {
+		int start = edgeConnectHandle + edgeConnectBody;
+		this->lapVetices[i] = this->roiVertices[start+i];
+	}
+
+	for (int i = 0; i < edgeConnectHandle; i++) {
+
+		this->edgeVertices[i] = this->roiVertices[i];
+	}
+
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_DYNAMIC_DRAW);
@@ -189,25 +248,29 @@ void Mesh::updateVertex() {
 	//// vertex color
 	//glEnableVertexAttribArray(2);
 	//glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vertices[0].Color.data() - (float*)&vertices[0]));
+	
+	for (int i = 0; i < 3; i++) {
+		glBindVertexArray(VAO_point[i]);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO_point[i]);
+
+		if (i == 0) {
+			glBufferData(GL_ARRAY_BUFFER, lapVetices.size() * sizeof(Vertex), &lapVetices[0], GL_DYNAMIC_DRAW);
+			// position 
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(lapVetices[0].Position.data() - (float*)&lapVetices[0]));
+		}
+
+		if (i == 1) {
+			glBufferData(GL_ARRAY_BUFFER, edgeVertices.size() * sizeof(Vertex), &edgeVertices[0], GL_DYNAMIC_DRAW);
+			// position 
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(edgeVertices[0].Position.data() - (float*)&edgeVertices[0]));
+		}
+	}
 
 	glBindVertexArray(0);
 
-	if (bunny || armadillo) {
-		
 
-		glBindVertexArray(VAO_point[0]);
-		glBindBuffer(GL_ARRAY_BUFFER, VBO_point[0]);
-		glBufferData(GL_ARRAY_BUFFER, roiVertices.size() * sizeof(Vertex), &roiVertices[0], GL_DYNAMIC_DRAW);
-
-		// position 
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(roiVertices[0].Position.data() - (float*)&roiVertices[0]));
-		// normal
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(roiVertices[0].Normal.data() - (float*)&roiVertices[0]));
-
-		glBindVertexArray(0);
-	}
 }
 
 
@@ -340,6 +403,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 		}
 	}
 	
+
 
 	return Mesh(vertices, indices, adjMatrix, ROIindice);
 }

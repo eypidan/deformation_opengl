@@ -22,14 +22,20 @@ public:
 	vector<float> lapLength;
 	vector<Vertex> vertices;
 	vector<vector<int>> adjMatrix;
-	vector<unsigned int> ROIindice; //the index of vertex in roi region 
 	vector<unsigned int> handleIndice;
-	vector<unsigned int> formalIndice;
+	
+	vector<unsigned int> ROIindice; //the index of vertex in roi region 
 	vector<Vertex> roiVertices;
-	vector<vector<int>> roiAdjMatrix;
+	vector<vector<unsigned int>> roiAdjMatrix;
 
-	vector<int> edgeIndice;
+	vector<unsigned int> edgeIndice; //edge vertices
 	vector<Vertex> edgeVertices;
+
+	vector<unsigned int> lapIndices; //unconstrained points in energy matrix
+	vector<Vertex> lapVetices;
+
+	unsigned int edgeConnectHandle;
+	unsigned int edgeConnectBody;
 	map<int, int> roiMap;
 	Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<int>> adjMatrix, vector<unsigned int> ROIv);
 	void updateVertex();
