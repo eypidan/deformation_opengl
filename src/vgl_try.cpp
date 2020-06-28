@@ -55,7 +55,6 @@ int main() {
 
     //shader init
     Shader modelShader("./shaderFiles/modelVertex.glsl", "./shaderFiles/modelFragment.glsl");
-    Shader pickShader("./shaderFiles/pickingVertex.glsl", "./shaderFiles/pickingFragment.glsl");
 
     
     //define light source
@@ -111,7 +110,7 @@ int main() {
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        renderModel(modelShader, magicCube, light, camera, pickShader);
+        renderModel(modelShader, magicCube, light, camera);
 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)

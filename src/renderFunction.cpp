@@ -2,7 +2,7 @@
 
 
 
-void renderModel(Shader shader, Model *object,  lightSource light, Camera camera, Shader pickShader) {
+void renderModel(Shader shader, Model *object,  lightSource light, Camera camera) {
 
 	
 	Eigen::Matrix4f model;
