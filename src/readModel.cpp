@@ -4,8 +4,6 @@ using namespace Eigen;
 
 
 static Eigen::Vector3f yellow , black, red,green;
-//static vector<unsigned int> bunnyControlPoints = { 195,127,71,339,346,581,577,410,587,629,514,260,330,481,717,437,570,165 };
-vector<unsigned int> bunnyControlPoints = { 430 };
 
 void Mesh::Draw(Shader shader) {
 	
@@ -50,7 +48,7 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<
 		float x = this->vertices[index].Position[0];
 		float z = this->vertices[index].Position[2];
 		if(bunny)
-			if (y > 0.1623) this->handleIndice.push_back(index);
+			if (y > 0.173) this->handleIndice.push_back(index);
 		if(armadillo)
 			if (x < -0.32 && y > 0.22 && z > 0.18) this->handleIndice.push_back(index);
 	// (x < -0.33) && (y > 0.242) && (z > 0.09)
@@ -88,10 +86,19 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<vector<
 	vector<int> edgeHandle, edgeBody; // the edge besides handle part and body part
 	for (int i = 0; i < edgeIndice.size(); i++) {
 		int index = edgeIndice[i];
-		if (vertices[index].Position[0] > -0.3435 && vertices[index].Position[1] < 0.21877)
-			edgeBody.push_back(index);
-		else
-			edgeHandle.push_back(index);
+		if (bunny) {
+			if (vertices[index].Position[1] < 0.17)
+				edgeBody.push_back(index);
+			else
+				edgeHandle.push_back(index);
+		}
+		else {
+			if (vertices[index].Position[0] > -0.3435 && vertices[index].Position[1] < 0.21877)
+				edgeBody.push_back(index);
+			else
+				edgeHandle.push_back(index);
+		}
+		
 	}
 	edgeIndice.clear();
 	edgeIndice.assign(edgeHandle.begin(), edgeHandle.end());

@@ -5,6 +5,7 @@ float x_angles = 0.0f;
 float y_angles = 0.0f;
 float z_angles = 0.0f;
 float height=-5;
+float modelDistance = -10;
 controlMove controlMove_0;
 
 static bool oldSpace = GLFW_RELEASE;
@@ -31,24 +32,24 @@ void processInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 		z_angles += 0.05f;
 	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		controlMove_0.x += 5;
-		//test(&magicCube->meshes[0]);
+		deform(&magicCube->meshes[0], 0.0084, -0.00143, 0.00052);
 	}
 		
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		controlMove_0.x -= 5;
-		//test(&magicCube->meshes[0]);
+		deform(&magicCube->meshes[0], -0.0084, 0.00143, -0.00052);
 	}
 		
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		deform(&magicCube->meshes[0], -0.01, 0.02, -0.01);
-		//test(&magicCube->meshes[0]);
+		deform(&magicCube->meshes[0], 0.01, -0.01, -0.01);
+
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 		deform(&magicCube->meshes[0], -0.01, 0.01, 0.01);
 	}
-	
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+		exit(0);
+	}
 
 	bool spaceAction = glfwGetKey(window, GLFW_KEY_SPACE);
 	if (spaceAction == GLFW_RELEASE && oldSpace == GLFW_PRESS) {
@@ -67,10 +68,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	if (yoffset > 0) {
-		height += 0.2;
+		modelDistance += 1;
 	}
 	else {
-		height -= 0.2;
+		modelDistance -= 1;
 	}
 }
 

@@ -53,7 +53,7 @@ extern float x_angles;
 extern float y_angles;
 extern float z_angles;
 extern float height;
-
+extern float modelDistance;
 //control point move
 extern controlMove controlMove_0;
 

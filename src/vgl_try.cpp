@@ -63,17 +63,22 @@ int main() {
     light.lightColor[0] = 1; light.lightColor[1] = 1; light.lightColor[2] = 1;
     light.lightPos[0] = 10; light.lightPos[1] = 100; light.lightPos[2] = 10;
     
+    //first hide window
+    glfwHideWindow(window);
     int select;
-    //cout << "Select target model" << endl;
-    //cin >> select;
-    select = 2;
+    cout << "Laplacian Mesh Editing\n\nUse A,D to rotate the model\nUse scroll to adjust the distance of the model from the screen\n";
+    cout << "Use up,down,left,right arrows in keyboard to move the handle part in model\n";
+    cout << "Use ESC to exit the program\n\n";
+    cout << "Select target model" << endl <<"1. bunny example.\n2. armadillo example\nPlease input:";
+    cin >> select;
+    //select = 1;
     string path = "./models/armadillo_easy.off";
     switch(select) {
     case 1:
         bunny = true;
         // load model
         //Model magicCube_0("./models/cublic.obj");
-        path = "./models/bunny_easy.off";
+        path = "./models/bunny.off";
         break;
     case 2:
         armadillo = true;
@@ -89,7 +94,8 @@ int main() {
     //Model magicCube_0("./models/magicCube/magicCube.obj");
     magicCube = &magicCube_0;
     
-
+    //show window after input
+    glfwShowWindow(window);
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
