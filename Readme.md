@@ -9,17 +9,14 @@
 
 - Laplacian surface editing
 
-- constant Laplacian
+- constant Laplacian:
 
-$$
-\phi(v_i) = v_i - \frac{1}{d_i} \sum_{j\in N_i} v_j
-$$
+  ![image-20200630230421227](./Readme.assets/image-20200630230421227.png)
 
-- Energy function used
+- Energy function used:
 
-  $$
-  E(V') = \sum_{i=1}^n ||\delta_i - \phi(v'_i)||^2 + \sum_{i=m}^n||v'_i-u_i||^2
-  $$
+  ![image-20200630230431842](./Readme.assets/image-20200630230431842.png)
+
 
 #### External library
 
@@ -35,9 +32,9 @@ $$
 
 - Armadillo  model: 494 vertices in ROI
 
-![2](Readme.assets/2.png)
+![2](./Readme.assets/2.png)
 
 - Bunny model: 1815 vertices in ROI
 
-![3](Readme.assets/3.png)
+![3](./Readme.assets/3.png)
 
